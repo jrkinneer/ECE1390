@@ -91,7 +91,7 @@ def kmeans_multiple(X, K, iters, R):
     current_ssd = 0
     for y in range(K):
         for z in range(n):
-            current_mean[y][z] = random.randint(int(min_m[z]), int(max_m[z]))
+            current_mean[y][z] = random.random()
     best_mean = current_mean
     
     #finds distances between all m points and current K means
@@ -112,7 +112,7 @@ def kmeans_multiple(X, K, iters, R):
         current_ssd = 0
         for y in range(K):
             for z in range(n):
-                current_mean[y][z] = random.randint(int(min_m[z]), int(max_m[z]))
+                current_mean[y][z] = random.random()
         
         #finds distances between all m points and current K means
         distances = scipy.spatial.distance.cdist(X, current_mean)
@@ -154,7 +154,8 @@ def kmeans_multiple(X, K, iters, R):
             
         for i in range(K):
             for j in range(n):
-                means[i][j] = sum[i][j]/points_in_cluster[i]
+                if (points_in_cluster[i] != 0):
+                    means[i][j] = sum[i][j]/points_in_cluster[i]
         
     #calculate ssd
     for i in range(m):
@@ -165,8 +166,53 @@ def kmeans_multiple(X, K, iters, R):
         
     return (ids, means, ssd)
 
+#load images
+img1 = cv2.imread("./input/im3.png")
+#normalize
+temp0 = cv2.normalize(img1.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
+temp1 = cv2.resize(temp0, (100,100))
 
-test_X = np.array([[7,8,9],[1,2,3], [4,4,4], [5,5,5], [3,3,3], [5,6,7], [3,3,3], [5,6,7]])
-K = 2
-iters = 10
-ids, means, ssd = kmeans_multiple(test_X, K, iters, 5)
+final = np.reshape(temp1, (temp1.shape[0] * temp1.shape[1], temp1.shape[2]))
+
+ids, means, ssd = kmeans_multiple(final, 7, 30, 20)
+
+#debugging
+#recolor img1
+recolored = final
+for i in range(10000):
+    cluster = int(ids[i][0])
+    recolored[i] = means[cluster]
+    
+show = np.reshape(recolored, (100,100,3)) * 255
+show = show.astype('uint8')
+
+cv2.imwrite("./output/im3_k7.png", show)
+
+# ids, means, ssd = kmeans_multiple(final, 5, 15, 15)
+
+# #debugging
+# #recolor img1
+# recolored = final
+# for i in range(10000):
+#     cluster = int(ids[i][0])
+#     recolored[i] = means[cluster]
+    
+# show = np.reshape(recolored, (100,100,3)) * 255
+# show = show.astype('uint8')
+
+# cv2.imwrite("./output/im2_k5.jpg", show)
+
+
+# ids, means, ssd = kmeans_multiple(final, 7, 30, 20)
+
+# #debugging
+# #recolor img1
+# recolored = final
+# for i in range(10000):
+#     cluster = int(ids[i][0])
+#     recolored[i] = means[cluster]
+    
+# show = np.reshape(recolored, (100,100,3)) * 255
+# show = show.astype('uint8')
+
+# cv2.imwrite("./output/im2_k7.jpg", show)
