@@ -2,7 +2,7 @@ import numpy as np
 from tqdm import *
 
 BLOCK_DIM = 7
-SEARCH_BLOCK_SIZE = BLOCK_DIM * BLOCK_DIM
+SEARCH_BLOCK_SIZE = BLOCK_DIM * 12
 
 def disparity_ssd(L, R):
     """Compute disparity map D(y, x) such that: L(y, x) = R(y, x + D(y, x))

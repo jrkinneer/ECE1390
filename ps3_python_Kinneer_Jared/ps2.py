@@ -4,6 +4,7 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 from disparity_ssd import disparity_ssd
+from gauss import gauss
 
 ## 1-a
 # Read images
@@ -29,16 +30,23 @@ from disparity_ssd import disparity_ssd
 # TODO: Rest of your code here
 
 #2
-L1 = cv2.imread(os.path.join('input', 'pair1-L.png'), 0) * (1.0 / 255.0)  # grayscale, [0, 1]
-R1 = cv2.imread(os.path.join('input', 'pair1-R.png'), 0) * (1.0 / 255.0)
 
-D_L = disparity_ssd(L1, R1)
-cv2.imshow("first disparity", D_L)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-cv2.imwrite("./output/ps3-2-a-1.png", D_L)
-D_R = disparity_ssd(R1, L1)
-cv2.imshow("second disparity", D_L)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-cv2.imwrite("./output/ps3-2-a-2.png")
+# L1 = cv2.imread(os.path.join('input', 'pair1-L.png'), cv2.IMREAD_GRAYSCALE) * (1.0 / 255.0)  # grayscale, [0, 1]
+# R1 = cv2.imread(os.path.join('input', 'pair1-R.png'), cv2.IMREAD_GRAYSCALE) * (1.0 / 255.0)
+# cv2.imshow("show L1", L1)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
+# D_L = disparity_ssd(L1, R1)
+# cv2.imwrite("./output/ps3-2-a-1.png", D_L)
+# D_R = disparity_ssd(R1, L1)
+# cv2.imwrite("./output/ps3-2-a-2.png", D_R)
+
+#3
+L1 = cv2.imread(os.path.join('input', 'pair1-L.png'), cv2.IMREAD_GRAYSCALE) * (1.0 / 255.0)  # grayscale, [0, 1]
+R1 = cv2.imread(os.path.join('input', 'pair1-R.png'), cv2.IMREAD_GRAYSCALE) * (1.0 / 255.0)
+noisy_L1 = gauss(L1, .1)
+noisy_R1 = gauss(R1, .1)
+D_L = disparity_ssd(noisy_L1, noisy_R1)
+cv2.imwrite("./output/ps3-3-a-1.png", D_L)
+D_R = disparity_ssd(noisy_R1, noisy_L1)
+cv2.imwrite("./output/ps3-3-a-2.png", D_R)
