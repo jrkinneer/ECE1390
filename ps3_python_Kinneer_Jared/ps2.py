@@ -51,4 +51,13 @@ from gauss import gauss
 # D_R = disparity_ssd(noisy_R1, noisy_L1)
 # cv2.imwrite("./output/ps3-3-a-2.png", D_R)
 
+
+#3b
+L1 = cv2.imread(os.path.join('input', 'pair1-L.png'), cv2.IMREAD_GRAYSCALE) * (1.0 / 255.0)  # grayscale, [0, 1]
+R1 = cv2.imread(os.path.join('input', 'pair1-R.png'), cv2.IMREAD_GRAYSCALE) * (1.0 / 255.0)
+mult_R1 = R1 * 1.1
+D_L = disparity_ssd(L1, mult_R1)
+cv2.imwrite("./output/ps3-3-b-1.png", D_L)
+D_R = disparity_ssd(mult_R1, L1)
+cv2.imwrite("./output/ps3-3-b-2.png", D_R)
 #4
