@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-import scipy
+import random
 
 #1a
 def compute_grad(img):
@@ -107,51 +107,187 @@ def highlight_corners(harris_image, window_size=3, threshold_percent = .01):
 
 def draw_corners(corners, output_image):
     for pair in corners:
-        cv2.circle(output_image, (pair[1], pair[0]), 3, (0,255,0), 2)
+        cv2.circle(output_image, (pair[1], pair[0]), 5, (0,255,0), 2)
   
-suppressed_transA = non_maximal_suppression(harris_transA, 5, .1)
-corners_transA = highlight_corners(suppressed_transA, 5, .3)
+THRESHOLD = .3
+WINDOW_SIZE = 5
+suppressed_transA = non_maximal_suppression(harris_transA, WINDOW_SIZE, THRESHOLD)
+corners_transA = highlight_corners(suppressed_transA, WINDOW_SIZE, THRESHOLD)
 highlighted_transA = cv2.imread("./input/transA.jpg")
 draw_corners(corners_transA, highlighted_transA)
 cv2.imwrite("./output/ps5-1-c-1.png", highlighted_transA)
 
-suppressed_transB = non_maximal_suppression(harris_transB, 5, .1)
-corners_transB = highlight_corners(suppressed_transB, 5, .3)
+suppressed_transB = non_maximal_suppression(harris_transB, WINDOW_SIZE, THRESHOLD)
+corners_transB = highlight_corners(suppressed_transB, WINDOW_SIZE, THRESHOLD)
 highlighted_transB = cv2.imread("./input/transB.jpg")
 draw_corners(corners_transB, highlighted_transB)
 cv2.imwrite("./output/ps5-1-c-2.png", highlighted_transB)
 
-suppressed_simA = non_maximal_suppression(harris_simA, 5, .1)
-corners_simA = highlight_corners(suppressed_simA, 5, .3)
+suppressed_simA = non_maximal_suppression(harris_simA, WINDOW_SIZE, THRESHOLD)
+corners_simA = highlight_corners(suppressed_simA, WINDOW_SIZE, THRESHOLD)
 highlighted_simA = cv2.imread("./input/simA.jpg")
 draw_corners(corners_simA, highlighted_simA)
 cv2.imwrite("./output/ps5-1-c-3.png", highlighted_simA)
 
-suppressed_simB = non_maximal_suppression(harris_simB, 5, .1)
-corners_simB = highlight_corners(suppressed_simB, 5, .3)
+suppressed_simB = non_maximal_suppression(harris_simB, WINDOW_SIZE, THRESHOLD)
+corners_simB = highlight_corners(suppressed_simB, WINDOW_SIZE, THRESHOLD)
 highlighted_simB = cv2.imread("./input/simB.jpg")
 draw_corners(corners_simB, highlighted_simB)
 cv2.imwrite("./output/ps5-1-c-4.png", highlighted_simB)
 
 #2a
 def compute_angle(grad_x, grad_y):
-    _, angle = cv2.cartToPolar(grad_y, grad_x, angleInDegrees=True)
-    return angle
+    magnitude, angle = cv2.cartToPolar(grad_y, grad_x, angleInDegrees=True)
+    return (magnitude,angle)
 
 def show_points_angles(corners, angles, original_img):
-    
     key_points = []
     
     for i in range(len(corners)):
-        angle = angles[0][i]
+        x,y = corners[i]
         
+        angle = angles[x,y]
+            
         kp = cv2.KeyPoint(x=corners[i][1], y=corners[i][0], size=20, angle=angle, response=0, octave=0, class_id=0)
         key_points.append(kp)
         
     return cv2.drawKeypoints(original_img, key_points, outImage=None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
-transA_angles = compute_angle(grad_y_transA, grad_x_transA)
-angled = show_points_angles(corners_transA, transA_angles, transA.copy())
-# cv2.imshow("transA with angles", angled)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
+magnitude_transA, transA_angles = compute_angle(grad_y_transA, grad_x_transA)
+angled_transA = show_points_angles(corners_transA, transA_angles, transA.copy())
+magnitude_transB, transB_angles = compute_angle(grad_y_transB, grad_x_transB)
+angled_transB = show_points_angles(corners_transB, transB_angles, transB.copy())
+cv2.imwrite("./output/ps5-2-a-1.png", np.hstack((angled_transA, angled_transB)))
+magnitude_simA, simA_angles = compute_angle(grad_y_simA, grad_x_simA)
+angled_simA = show_points_angles(corners_simA, simA_angles, simA.copy())
+magnitude_simA, simB_angles = compute_angle(grad_y_simB, grad_x_simB)
+angled_simB = show_points_angles(corners_simB, simB_angles, simB.copy())
+cv2.imwrite("./output/ps5-2-a-2.png", np.hstack((angled_simA, angled_simB)))
+
+#2b
+def key_points(corners):
+    points = []
+    for i in range(len(corners)):
+        x,y = corners[i]
+        kp = cv2.KeyPoint(x=x, y=y, size=3, angle=90, octave = 0)
+        points.append(kp)
+        
+    return points
+    
+def points_Descriptors(I, points):
+    sift = cv2.SIFT_create()
+    points_final, descriptors = sift.compute(I, points)
+    return points_final, descriptors
+
+def feature_matching(d_a, d_b):
+    bfm = cv2.BFMatcher()
+    matches = bfm.match(d_a, d_b)
+    
+    return matches
+
+key_points1 = key_points(corners_transA)
+key_points2 = key_points(corners_transB)
+
+pointsA, descA = points_Descriptors(transA, key_points1)
+pointsB, descB = points_Descriptors(transB, key_points2)
+matches = feature_matching(descA, descB)
+
+def highlight_matches(imgA, imgB, pointsA, pointsB, matches):
+    
+    width_img1 = int(imgA.shape[1])
+    combined_img = np.hstack((imgA, imgB))
+    for point in matches:
+        p1 = pointsA[point.queryIdx].pt
+        p2 = pointsB[point.trainIdx].pt
+        
+        p1 = (int(p1[0]), int(p1[1]))
+        p2 = (int(p2[0]), int(p2[1]))
+        
+        cv2.circle(combined_img, (p1[1], p1[0]), 5, (255,0,0), 2)
+        cv2.circle(combined_img, (p2[1] + width_img1, p2[0]), 5, (255,0,0), 2)
+        cv2.line(combined_img, (p1[1], p1[0]), (p2[1] + width_img1, p2[0]), (255,0,0), 2)
+        
+    return combined_img
+
+A = cv2.imread("./input/transA.jpg")
+B = cv2.imread("./input/transB.jpg")
+lined = highlight_matches(A, B, pointsA, pointsB, matches)   
+cv2.imwrite("./output/ps5-2-b-1.png", lined)
+
+
+key_points1 = key_points(corners_simA)
+key_points2 = key_points(corners_simB)
+
+pointsA_s, descA = points_Descriptors(simA, key_points1)
+pointsB_s, descB = points_Descriptors(simB, key_points2)
+matches_s = feature_matching(descA, descB)
+A_s = cv2.imread("./input/simA.jpg")
+B_s = cv2.imread("./input/simB.jpg")
+lined = highlight_matches(A_s, B_s, pointsA_s, pointsB_s, matches_s)   
+cv2.imwrite("./output/ps5-2-b-2.png", lined)
+
+#3
+def translational_case(imgA, imgB, pointsA, pointsB, matches):
+    x = random.randint(0, len(matches))
+    p1_first = pointsA[matches[x].queryIdx].pt
+    p2_first = pointsB[matches[x].trainIdx].pt
+    
+    trans_distance_first = np.sqrt((p1_first[0]-p2_first[0])**2 - (p1_first[1] - p2_first[1]**2))
+    
+    consensus = []
+    
+    final_dist = trans_distance_first
+    #get first consensus
+    for point in matches:
+        p1 = pointsA[point.queryIdx].pt
+        p2 = pointsB[point.trainIdx].pt
+        
+        dist = np.sqrt((p1[0]-p2[0])**2 - (p1[1] - p2[1]**2))
+        
+        if (dist < trans_distance_first * 1.2 and dist > trans_distance_first * .8):
+            consensus.append(point)
+        
+    #see if any other pair distance creates a better consensus
+    for point in matches:
+        p1_x = pointsA[point.queryIdx].pt
+        p2_x = pointsB[point.trainIdx].pt
+    
+        trans_distance_x = np.sqrt((p1_x[0]-p2_x[0])**2 - (p1_x[1] - p2_x[1]**2))
+        
+        temp_consensus = []
+        
+        for point2 in matches:
+            p1_y = pointsA[point2.queryIdx].pt
+            p2_y = pointsB[point2.trainIdx].pt
+        
+            dist = np.sqrt((p1_y[0]-p2_y[0])**2 - (p1_y[1] - p2_y[1]**2))
+            
+            if (dist < trans_distance_x * 1.2 and dist > trans_distance_x * .8):
+                temp_consensus.append(point2) 
+    
+        if (len(temp_consensus) > len(consensus)):
+            consensus = temp_consensus
+            final_dist = trans_distance_x
+            
+    final_img = np.hstack((imgA, imgB))
+    width_img1 = imgA.shape[1]
+    
+    for point in consensus:
+        p1 = pointsA[point.queryIdx].pt
+        p2 = pointsB[point.trainIdx].pt
+        
+        p1 = (int(p1[0]), int(p1[1]))
+        p2 = (int(p2[0]), int(p2[1]))
+        
+        cv2.circle(final_img, (p1[1], p1[0]), 5, (255,0,0), 2)
+        cv2.circle(final_img, (p2[1] + width_img1, p2[0]), 5, (255,0,0), 2)
+        cv2.line(final_img, (p1[1], p1[0]), (p2[1] + width_img1, p2[0]), (255,0,0), 2)
+    
+    print("translational vector length = ", final_dist)
+    print("largest consensus % = ", len(consensus)/len(matches))
+    
+    return final_img
+
+cv2.imwrite("./output/ps5-3-a-1.png", translational_case(A, B, pointsA, pointsB, matches))
+
+# def sim_case(imgA, imgB, pointsA, pointsB, mathces):
