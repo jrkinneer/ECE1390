@@ -7,15 +7,16 @@ def lucas_kanade(img1, img2, window_size=5):
     v = np.zeros_like(img1)
     
     #smooth imgaes before gradient calculation
-    smoothed_img1 = cv2.GaussianBlur(img1, (5, 5), 0)
-    smoothed_img2 = cv2.GaussianBlur(img2, (5, 5), 0)
-    
+    smoothed_img1 = cv2.GaussianBlur(img1, (5, 5), 1)
+    smoothed_img2 = cv2.GaussianBlur(img2, (5, 5), 1)
     #calculate gradient
-    grad_x = ndimage.sobel(smoothed_img1, axis=0, mode='constant')
-    grad_y = ndimage.sobel(smoothed_img1, axis=1, mode='constant')
+    kernel_x = np.array([[-1,1], [-1,1]])
+    kernel_y = np.array([[-1,-1], [1,1]])
+    grad_x = cv2.filter2D(smoothed_img1, -1, kernel_x)
+    grad_y = cv2.filter2D(smoothed_img1, -1, kernel_y)
 
     kernel_t = np.array([[1,1],[1,1]])
-    grad_t = cv2.filter2D(img2, -1, kernel_t) - cv2.filter2D(img1, -1, kernel_t)
+    grad_t = cv2.filter2D(smoothed_img2, -1, kernel_t) - cv2.filter2D(smoothed_img1, -1, kernel_t)
     
     w = window_size//2
     
@@ -45,3 +46,13 @@ def lucas_kanade(img1, img2, window_size=5):
             v[i][j] = d[1][0]
     
     return u,v
+
+def draw_arrows(U, V, original_image_color):
+    img = original_image_color.copy()
+    
+    for i in range(0, original_image_color.shape[0] - 1, 10):
+        for j in range(0, original_image_color.shape[1] - 1, 10):
+            if U[i][j] > 0 and V[i][j] > 0:
+                cv2.arrowedLine(img, (j,i), (int(j+V[i][j]), int(i + U[i][j])), (0,255,0), 1)
+                
+    return img
