@@ -3,11 +3,16 @@ import cv2
 
 def gaussian_reduce(original_img):
     blurred = cv2.GaussianBlur(original_img, (5,5), 2.5)
-    reduced = np.zeros_like(original_img[1::2, 1::2])
-    kernel = np.array([1,4,6,4,1])/16
     
-    for i in range(original_img.shape[0]):
-        for j in range(original_img.shape[1]):
+    new_rows = original_img.shape[0]//2
+    
+    new_cols = original_img.shape[1]//2
+        
+    reduced = np.zeros((new_rows, new_cols))
+    kernel = np.array([1,4,6,4,1])/16
+        
+    for i in range(new_rows*2):
+        for j in range(new_cols*2):
             if i%2 == 1 and j%2==1:
                 if j == 1:
                     window=blurred[i][j:j+3]

@@ -46,13 +46,3 @@ def lucas_kanade(img1, img2, window_size=5):
             v[i][j] = d[1][0]
     
     return u,v
-
-def draw_arrows(U, V, original_image_color):
-    img = original_image_color.copy()
-    
-    for i in range(0, original_image_color.shape[0] - 1, 10):
-        for j in range(0, original_image_color.shape[1] - 1, 10):
-            if U[i][j] > 0 and V[i][j] > 0:
-                cv2.arrowedLine(img, (j,i), (int(j+V[i][j]), int(i + U[i][j])), (0,255,0), 1)
-                
-    return img
