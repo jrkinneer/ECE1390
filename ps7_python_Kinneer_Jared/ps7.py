@@ -153,16 +153,7 @@ plt.show()
 scores = model.evaluate(ds_test_, verbose=0)
 print('Accuracy on testing data: {}% \n Error on training data: {} \n'.format(scores[1], 1 - scores[1]))
 print(model.predict(ds_test_))
-# #displaying an image with the detected label
-# from keras.preprocessing import image
-# im = image.load_img('./input/p2/test_imgs/Blue/2_00.jpg')
-# im = np.expand_dims(im, axis=0)
-# pred = model.predict(im, verbose=0)
-# print(pred)
-# classes = ["Black", "Blue", "Green", "No car"]
-# class_ID = np.argmax(pred)
-# title = 'predicted ' + classes[class_ID]
-# plt.imshow(tf.squeeze(im))
-# plt.axis('off')
-# plt.title(title)
-# plt.show()
+
+#TODO
+#display images with predicted label
+
