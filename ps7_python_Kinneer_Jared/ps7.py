@@ -9,9 +9,9 @@ import os
 car_1 = cv2.imread("./input/p1/car.jpg")
 car_hog, car_hog_img = hog(car_1, cells_per_block = (2,2,), channel_axis = 2, visualize = True)
 print(car_hog.shape)
-# cv2.imshow("hog", car_hog_img)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
+cv2.imshow("hog", car_hog_img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
 
 cv2.imwrite("./output/ps7-1-a.png", car_hog_img)
 
@@ -156,4 +156,27 @@ print(model.predict(ds_test_))
 
 #TODO
 #display images with predicted label
+display_path = "./input/p2/display_imgs"
+fig = plt.figure()
+R = 3
+C = 2
 
+labels = ["airplane", "automobile", "truck", "None"]
+
+#for all display images
+for ind, file in enumerate(os.listdir(display_path)):
+    img = cv2.imread(display_path+"/"+file)
+    
+    #predict class
+    label = model.predict(np.expand_dims(img, axis=0), verbose=0)
+    
+    #get class as a string from list
+    label_text = labels[np.argmax(label)]
+    
+    #graph image with predicted class
+    fig.add_subplot(R, C, ind+1)
+    plt.imshow(img)
+    plt.axis('off')
+    plt.title("predicted " + label_text)
+    
+plt.show()
